@@ -6,7 +6,6 @@ import subprocess
 import re
 import time
 
-
 @lru_cache()
 def fetch_fanduel(ttl_hash=None):
     del ttl_hash
@@ -23,11 +22,23 @@ def fetch_betmgm(ttl_hash=None):
     return fetch_game_data(sportsbook="betmgm")
 
 def fetch_game_data(sportsbook="fanduel"):
-    cmd = ["python", "main.py", "-xgb", f"-odds={sportsbook}"]
-    stdout = subprocess.check_output(cmd, cwd="../").decode()
+    cmd = ["python3", "main.py", "-xgb", f"-odds={sportsbook}"]
+
+    try:
+        result = subprocess.run(cmd, cwd="../", check=True, text=True, capture_output=True)
+        stdout = result.stdout
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred: {e}")
+        print(f"Standard output: {e.stdout}")
+        print(f"Standard error: {e.stderr}")
+        return {}
+
+    print(f"Output from main.py: {stdout}")  # Added print statement
+
     data_re = re.compile(r'\n(?P<home_team>[\w ]+)(\((?P<home_confidence>[\d+\.]+)%\))? vs (?P<away_team>[\w ]+)(\((?P<away_confidence>[\d+\.]+)%\))?: (?P<ou_pick>OVER|UNDER) (?P<ou_value>[\d+\.]+) (\((?P<ou_confidence>[\d+\.]+)%\))?', re.MULTILINE)
     ev_re = re.compile(r'(?P<team>[\w ]+) EV: (?P<ev>[-\d+\.]+)', re.MULTILINE)
     odds_re = re.compile(r'(?P<away_team>[\w ]+) \((?P<away_team_odds>-?\d+)\) @ (?P<home_team>[\w ]+) \((?P<home_team_odds>-?\d+)\)', re.MULTILINE)
+    
     games = {}
     for match in data_re.finditer(stdout):
         game_dict = {'away_team': match.group('away_team').strip(),
@@ -48,19 +59,18 @@ def fetch_game_data(sportsbook="fanduel"):
             if odds_match.group('home_team') == game_dict['home_team']:
                 game_dict['home_team_odds'] = odds_match.group('home_team_odds')
 
-        print(json.dumps(game_dict, sort_keys=True, indent=4))
         games[f"{game_dict['away_team']}:{game_dict['home_team']}"] = game_dict
-    return games
 
+    print(f"Games data: {games}")  # Added print statement
+
+    return games
 
 def get_ttl_hash(seconds=600):
     """Return the same value withing `seconds` time period"""
     return round(time.time() / seconds)
 
-
 app = Flask(__name__)
 app.jinja_env.add_extension('jinja2.ext.loopcontrols')
-
 
 @app.route("/")
 def index():
@@ -68,4 +78,11 @@ def index():
     draftkings = fetch_draftkings(ttl_hash=get_ttl_hash())
     betmgm = fetch_betmgm(ttl_hash=get_ttl_hash())
 
+    print(f"Fanduel data: {fanduel}")  # Added print statement
+    print(f"Draftkings data: {draftkings}")  # Added print statement
+    print(f"BetMGM data: {betmgm}")  # Added print statement
+
     return render_template('index.html', today=date.today(), data={"fanduel": fanduel, "draftkings": draftkings, "betmgm": betmgm})
+
+if __name__ == "__main__":
+    app.run(debug=True)

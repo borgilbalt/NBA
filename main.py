@@ -105,19 +105,19 @@ def main():
     if args.nn:
         print("------------Neural Network Model Predictions-----------")
         data = tf.keras.utils.normalize(data, axis=1)
-        NN_Runner.nn_runner(data, todays_games_uo, frame_ml, games, home_team_odds, away_team_odds, args.kc)
+        NN_Runner.nn_runner(data, todays_games_uo, frame_ml, games, home_team_odds, away_team_odds)
         print("-------------------------------------------------------")
     if args.xgb:
         print("---------------XGBoost Model Predictions---------------")
-        XGBoost_Runner.xgb_runner(data, todays_games_uo, frame_ml, games, home_team_odds, away_team_odds, args.kc)
+        XGBoost_Runner.xgb_runner(data, todays_games_uo, frame_ml, games, home_team_odds, away_team_odds)
         print("-------------------------------------------------------")
     if args.A:
         print("---------------XGBoost Model Predictions---------------")
-        XGBoost_Runner.xgb_runner(data, todays_games_uo, frame_ml, games, home_team_odds, away_team_odds, args.kc)
+        XGBoost_Runner.xgb_runner(data, todays_games_uo, frame_ml, games, home_team_odds, away_team_odds)
         print("-------------------------------------------------------")
         data = tf.keras.utils.normalize(data, axis=1)
         print("------------Neural Network Model Predictions-----------")
-        NN_Runner.nn_runner(data, todays_games_uo, frame_ml, games, home_team_odds, away_team_odds, args.kc)
+        NN_Runner.nn_runner(data, todays_games_uo, frame_ml, games, home_team_odds, away_team_odds)
         print("-------------------------------------------------------")
 
 
@@ -127,6 +127,5 @@ if __name__ == "__main__":
     parser.add_argument('-nn', action='store_true', help='Run with Neural Network Model')
     parser.add_argument('-A', action='store_true', help='Run all Models')
     parser.add_argument('-odds', help='Sportsbook to fetch from. (fanduel, draftkings, betmgm, pointsbet, caesars, wynn, bet_rivers_ny')
-    parser.add_argument('-kc', action='store_true', help='Calculates percentage of bankroll to bet based on model edge')
     args = parser.parse_args()
     main()
